@@ -37,12 +37,11 @@ public class AliExpressParser extends Parser {
 
         itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
 
-        /*
-            while(itemElements.size() < size) {
-                // simulating page scrolling to get new data
-                itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
-            }
-         */
+//        Data is loaded by a js script that is triggered when the page is scrolled down
+//            while(itemElements.size() < size) {
+                  //  simulating page scrolling to get new data
+//                itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
+//            }
 
         for (HtmlDivision itemElement : itemElements) {
             Map<String, Object> props = new HashMap<>();
@@ -57,6 +56,9 @@ public class AliExpressParser extends Parser {
         return items;
     }
 
+    /*
+        Example for the handler of product page
+     */
     public Map<String, Object> parseItemPage(String url) {
         Map<String, Object> props = new HashMap<>();
 
