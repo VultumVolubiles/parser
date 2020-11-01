@@ -14,7 +14,7 @@ public class Application {
     public static void main(String[] args) {
         String url = "https://flashdeals.aliexpress.com/en.htm?";
         File storage = new File("storage");
-        String filename = storage.getPath() + "test.csv";
+        File file = storage.toPath().resolve("test.csv").toFile();
         if (!storage.exists()) {
             storage.mkdirs();
         }
@@ -30,7 +30,7 @@ public class Application {
 
         try {
             List<String[]> strings = CSVHelper.toStrings(data);
-            CSVHelper.exportData(strings, storage.getPath() + filename);
+            CSVHelper.exportData(strings, file);
             System.out.println("Writing to csv successful");
         } catch (IOException e) {
             System.out.println("Failed to write data to file");
@@ -38,10 +38,9 @@ public class Application {
 
         // Checking
         try {
-            List<String[]> strings = CSVHelper.importData(storage.getPath() + filename);
+            List<String[]> strings = CSVHelper.importData(file);
             System.out.println("Data equals before and after reading: "
-                    + data.toString()
-                    .equals(CSVHelper.toMaps(strings).toString()));
+                    + data.toString().equals(CSVHelper.toMaps(strings).toString())); // work if file created in this run
         } catch (IOException | CsvException e) {
             System.out.println("Failed to read data from file");
         }

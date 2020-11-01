@@ -15,26 +15,25 @@ public class CSVHelper {
     /*
         Export data to *.csv file
      */
-    public static void exportData(List<String[]> data, String filename) throws IOException {
-        File file = new File(filename);
-
+    public static void exportData(List<String[]> data, File file) throws IOException {
         if (!file.exists())
             file.createNewFile();
 
-        CSVWriter writer = new CSVWriter(new FileWriter(filename));
-        writer.writeAll(data);
+        CSVWriter writer = new CSVWriter(new FileWriter(file, true));
+        for (String[] s : data) {
+            writer.writeNext(s);
+        }
         writer.close();
     }
 
     /*
         Import data from *.csv file
      */
-    public static List<String[]> importData(String filename) throws IOException, CsvException {
-        File file = new File(filename);
+    public static List<String[]> importData(File file) throws IOException, CsvException {
         if (!file.exists())
             throw new FileNotFoundException("File not found");
 
-        CSVReader reader = new CSVReader(new FileReader(filename));
+        CSVReader reader = new CSVReader(new FileReader(file));
         List<String[]> strings = reader.readAll();
 
         return strings;
@@ -42,9 +41,15 @@ public class CSVHelper {
 
     public static List<String[]> toStrings(List<Map<String, Object>> maps) {
         List<String[]> strings = new ArrayList<>();
-        for (Map<String, Object> map : maps)
-            strings.add(new String[] {map.toString()});
+        for (Map<String, Object> map : maps) {
+            String[] record = new String[map.size()];
+            Object[] keys = map.keySet().toArray();
 
+            for (int i = 0; i < keys.length; i++)
+                record[i] = keys[i].toString() + "=" + map.get(keys[i].toString());
+
+            strings.add(record);
+        }
         return strings;
     }
 
@@ -54,12 +59,9 @@ public class CSVHelper {
         for (String[] str : strings) {
             Map<String, Object> map = new HashMap<>();
 
-            if (str.length > 0) {
-                String[] values = StringUtils.substringBetween(str[0], "{", "}").split(", ");
-                for (String val: values) {
-                    String key = val.substring(0, val.indexOf("="));
-                    map.put(key, val.substring(val.indexOf("=")+1));
-                }
+            for (String val: str) {
+                String key = val.substring(0, val.indexOf("="));
+                map.put(key, val.substring(val.indexOf("=")+1));
             }
 
             maps.add(map);
