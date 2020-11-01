@@ -106,7 +106,7 @@ public class AliExpressParser extends Parser {
                         case "original-price": {
                             String text = e.getVisibleText();
                             String originalPrice = text.substring(0, text.indexOf("|")-1);
-                            String discount = text.substring(text.indexOf("|") + 1, text.indexOf(" off"));
+                            String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
                             props.put("original price", originalPrice);
                             props.put("discount", discount);
                             break;
