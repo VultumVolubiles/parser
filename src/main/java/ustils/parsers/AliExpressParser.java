@@ -16,10 +16,6 @@ import java.util.Map;
     Implementation of the parser for AliExpress
  */
 public class AliExpressParser extends Parser {
-    private enum PageType {
-        FLASH_DEALS,
-        ITEM
-    }
 
     public AliExpressParser(WebClient webClient) {
         super(webClient);
@@ -37,94 +33,47 @@ public class AliExpressParser extends Parser {
 
         itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
 
-//        Data is loaded by a js script that is triggered when the page is scrolled down
-//            while(itemElements.size() < size) {
-                  //  simulating page scrolling to get new data
-//                itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
-//            }
-
         for (HtmlDivision itemElement : itemElements) {
             Map<String, Object> props = new HashMap<>();
+            DomElement a = itemElement.getFirstElementChild();
 
-            if (itemElement.getFirstElementChild() != null) {
-                DomElement child = itemElement.getFirstElementChild();
-                handle(PageType.FLASH_DEALS, child, props);
+            // get deal item link
+            if (a.getTagName().equals("a") && a.hasAttribute("href")) {
+                String link = a.getAttribute("href");
+                link = link.startsWith("//") ? link.substring(2) : link; // Remove "//" at the beginning
+                props.put("link", link);
+
+                for (DomElement div : a.getChildElements()) {
+                    String divClass = div.getAttribute("class");
+
+                    // get item image
+                    if ("item-image".equals(divClass)) {
+                        String src = div.getFirstElementChild().getAttribute("src");
+                        src = src.startsWith("//") ? src.substring(2) : src; // Remove "//" at the beginning
+                        props.put("image", src);
+                    } else if ("item-details".equals(divClass))
+                        //get item title, current price, original price and discount
+                        for (DomElement detail : div.getChildElements()) {
+                            String detailClass = div.getAttribute("class");
+
+                            if ("item-details-title".equals(detailClass))
+                                props.put("title", detail.getVisibleText());
+                            else if ("current-price".equals(detailClass))
+                                props.put("current price", detail.getVisibleText());
+                            else if ("original-price".equals(detailClass)) {
+                                String text = detail.getVisibleText();
+                                String originalPrice = text.substring(0, text.indexOf("|") - 1);
+                                String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
+                                props.put("original price", originalPrice);
+                                props.put("discount", discount);
+                            }
+                        }
+                }
+
+                items.add(props);
             }
-            items.add(props);
         }
-
         return items;
     }
 
-    /*
-        Example for the handler of product page
-     */
-    public Map<String, Object> parseItemPage(String url) {
-        Map<String, Object> props = new HashMap<>();
-
-        // todo
-        // handle(PageType.ITEM, someElement, props);
-
-        return props;
-    }
-
-    /*
-        Handles DomElement for a specific page
-
-        @param type     AliExpress page type
-        @param e        html element
-        @param props    map for save data
-     */
-    private void handle(PageType type, DomElement e, Map<String, Object> props) {
-
-        switch (type) {
-            case FLASH_DEALS: {
-                if (e.getTagName().equals("a") && e.hasAttribute("href")) {
-                    String link = e.getAttribute("href");
-                    link = link.startsWith("//") ? link.substring(2) : link; // Remove "//" at the beginning
-                    props.put("link", link);
-                    for (DomElement child : e.getChildElements()) {
-                        handle(PageType.FLASH_DEALS, child, props);
-                    }
-                } else if (e.hasAttribute("class")) {
-                    String eClass = e.getAttribute("class");
-
-                    switch (eClass) {
-                        case "item-details": {
-                            for (DomElement child : e.getChildElements()) {
-                                handle(PageType.FLASH_DEALS, child, props);
-                            }
-                            break;
-                        }
-                        case "item-details-title": {
-                            props.put("title", e.getVisibleText());
-                            break;
-                        }
-
-                        case "current-price": {
-                            props.put("current price", e.getVisibleText());
-                            break;
-                        }
-                        case "original-price": {
-                            String text = e.getVisibleText();
-                            String originalPrice = text.substring(0, text.indexOf("|")-1);
-                            String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
-                            props.put("original price", originalPrice);
-                            props.put("discount", discount);
-                            break;
-                        }
-                        case "stock": {
-                            // todo
-                        }
-                        default: {
-                            System.out.println("WARN: No handler for class \"" + eClass + "\"");
-                        }
-                    }
-                }
-            }
-            case ITEM: {
-                // todo handler for item page
-            }
-        }
-    }
 }
