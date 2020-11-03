@@ -63,11 +63,13 @@ public class AliExpressParser extends Parser {
             if (jItem.getString("productImage").startsWith("//"))
                 jItem.put("productImage", jItem.getString("productImage").substring(2));
 
+            jItem.put("productTitle", jItem.getString("productTitle").replaceAll(" {2}", " "));
+
             float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4).replaceAll(",", ""));
             float discount = jItem.getFloat("discount");
             float currentPrice = originalPrice * (1 - discount/100);
             jItem.put("currentPrice", jItem.getString("oriMinPrice").substring(0, 4)
-                    + String.format("%.2f", currentPrice));
+                    + String.format("%.2f", currentPrice).replace(',', '.'));
 
             items.add(jItem.toMap());
         }
@@ -113,11 +115,11 @@ public class AliExpressParser extends Parser {
                             if ("item-details-title".equals(detailClass))
                                 props.put("productTitle", detail.getVisibleText());
                             else if ("current-price".equals(detailClass))
-                                props.put("current price", detail.getVisibleText());
+                                props.put("currentPrice", detail.getVisibleText());
                             else if ("original-price".equals(detailClass)) {
                                 String text = detail.getVisibleText();
                                 String originalPrice = text.substring(0, text.indexOf("|") - 1);
-                                String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
+                                String discount = text.substring(text.indexOf("|") + 2, text.indexOf("%"));
                                 props.put("oriMinPrice", originalPrice);
                                 props.put("discount", discount);
                             }
