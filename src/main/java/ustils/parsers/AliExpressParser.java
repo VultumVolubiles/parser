@@ -1,9 +1,14 @@
 package ustils.parsers;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,57 +27,46 @@ public class AliExpressParser extends Parser {
     }
 
     /*
-        @param url      page url
-        @param size     number of elements to parse (not working)
+        Gets product data from the 'flash deals' page by sending requests.
      */
-    public List<Map<String, Object>> parseFlashDeals(String url, int size) throws IOException {
-        HtmlPage page = super.getWebClient().getPage(new URL(url));
-
+    public List<Map<String, Object>> parseFlashDeals(String url, int size) throws Exception {
+        super.getWebClient().getPage(new URL(url));
         List<Map<String, Object>> items = new ArrayList();
-        List<HtmlDivision> itemElements;
 
-        itemElements = page.getByXPath("//div[contains(@class, 'deals-item-inner')]");
+        WebRequest request = new WebRequest(new URL("https://gpsfront.aliexpress.com/getRecommendingResults.do"),
+                HttpMethod.GET);
 
-        for (HtmlDivision itemElement : itemElements) {
-            Map<String, Object> props = new HashMap<>();
-            DomElement a = itemElement.getFirstElementChild();
+        String cookies = super.getWebClient().getCookies(new URL(url)).toString();
+        cookies = cookies.substring(1, cookies.length()-1);
+        request.setAdditionalHeader("Cookie", cookies);
 
-            // get deal item link
-            if (a.getTagName().equals("a") && a.hasAttribute("href")) {
-                String link = a.getAttribute("href");
-                link = link.startsWith("//") ? link.substring(2) : link; // Remove "//" at the beginning
-                props.put("link", link);
+        List<NameValuePair> requestParams = new ArrayList<>();
+        requestParams.add(new NameValuePair("limit", "50"));
+        requestParams.add(new NameValuePair("offset", "0"));
+        requestParams.add(new NameValuePair("widget_id", "5547572"));
+        request.setRequestParameters(requestParams);
 
-                for (DomElement div : a.getChildElements()) {
-                    String divClass = div.getAttribute("class");
+        String content = super.getWebClient().getPage(request).getWebResponse().getContentAsString();
+        JSONObject jObject = new JSONObject(content);
 
-                    // get item image
-                    if ("item-image".equals(divClass)) {
-                        String src = div.getFirstElementChild().getAttribute("src");
-                        src = src.startsWith("//") ? src.substring(2) : src; // Remove "//" at the beginning
-                        props.put("image", src);
-                    } else if ("item-details".equals(divClass))
-                        //get item title, current price, original price and discount
-                        for (DomElement detail : div.getChildElements()) {
-                            String detailClass = div.getAttribute("class");
+        if (!jObject.getBoolean("success"))
+            throw new Exception("Couldn't get data");
 
-                            if ("item-details-title".equals(detailClass))
-                                props.put("title", detail.getVisibleText());
-                            else if ("current-price".equals(detailClass))
-                                props.put("current price", detail.getVisibleText());
-                            else if ("original-price".equals(detailClass)) {
-                                String text = detail.getVisibleText();
-                                String originalPrice = text.substring(0, text.indexOf("|") - 1);
-                                String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
-                                props.put("original price", originalPrice);
-                                props.put("discount", discount);
-                            }
-                        }
-                }
+        String postback = jObject.getString("postback");
+        JSONArray jArray = jObject.getJSONArray("results");
+        for (int i = 0; i < jArray.length() && items.size() < size; i++) {
+            JSONObject jItem = jArray.getJSONObject(i);
 
-                items.add(props);
-            }
+            float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4));
+            float discount = jItem.getFloat("discount");
+            float currentPrice = originalPrice * (1 - discount/100);
+            jItem.put("currentPrice", jItem.getString("oriMinPrice").substring(0, 4)
+                    + String.format("%.2f", currentPrice));
+
+            items.add(jItem.toMap());
         }
+        // todo size
+
         return items;
     }
 
