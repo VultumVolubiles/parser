@@ -24,7 +24,7 @@ public class Application {
 
         try {
             data = aliExpressParser.parseFlashDeals(url, 100);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Can't parse flash deals page");
         }
 
