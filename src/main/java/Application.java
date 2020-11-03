@@ -15,9 +15,8 @@ public class Application {
         String url = "https://flashdeals.aliexpress.com/en.htm?";
         File storage = new File("storage");
         File file = storage.toPath().resolve("test.csv").toFile();
-        if (!storage.exists()) {
+        if (!storage.exists())
             storage.mkdirs();
-        }
 
         AliExpressParser aliExpressParser = new AliExpressParser(new WebClient());
         List<Map<String, Object>> requestsData = new ArrayList<>();
@@ -63,7 +62,7 @@ public class Application {
                     }
                 }
 
-                if (equalsRows == parsMap.size()-1)
+                if (equalsRows == parsMap.size())
                     equalsData++;
                 System.out.println("--------------------");
             }
