@@ -29,7 +29,7 @@ public class AliExpressParser extends Parser {
     /*
         Gets product data from the 'flash deals' page by sending requests.
      */
-    public List<Map<String, Object>> parseFlashDeals(String url, int size) throws Exception {
+    public List<Map<String, Object>> getFlashDeals(String url, int size) throws Exception {
         super.getWebClient().getPage(new URL(url));
         List<Map<String, Object>> items = new ArrayList();
 

@@ -24,7 +24,7 @@ public class Application {
         List<Map<String, Object>> parsingData = new ArrayList<>();
 
         try {
-            requestsData = aliExpressParser.parseFlashDeals(url, 100);
+            requestsData = aliExpressParser.getFlashDeals(url, 100);
 
             // Checking that the data received through the request is equal to the data received by parsing the page
             parsingData = aliExpressParser.parseFlashDeals(url);
