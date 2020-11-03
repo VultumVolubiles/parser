@@ -41,40 +41,52 @@ public class AliExpressParser extends Parser {
         request.setAdditionalHeader("Cookie", cookies);
 
         List<NameValuePair> requestParams = new ArrayList<>();
-        requestParams.add(new NameValuePair("limit", "50"));
+        requestParams.add(new NameValuePair("limit", "25"));
         requestParams.add(new NameValuePair("offset", "0"));
         requestParams.add(new NameValuePair("widget_id", "5547572"));
+        requestParams.add(new NameValuePair("postback", null));
         request.setRequestParameters(requestParams);
 
-        String content = super.getWebClient().getPage(request).getWebResponse().getContentAsString();
-        JSONObject jObject = new JSONObject(content);
+        boolean postbackIsNull = true;
+        while (items.size() < size) {
+            String content = super.getWebClient().getPage(request).getWebResponse().getContentAsString();
+            JSONObject jObject = new JSONObject(content);
 
-        if (!jObject.getBoolean("success"))
-            throw new Exception("Couldn't get data");
+            if (!jObject.getBoolean("success"))
+                throw new Exception("Couldn't get data");
 
-        String postback = jObject.getString("postback");
-        JSONArray jArray = jObject.getJSONArray("results");
-        for (int i = 0; i < jArray.length() && items.size() < size; i++) {
-            JSONObject jItem = jArray.getJSONObject(i);
+            if (postbackIsNull) {
+                String postback = jObject.getString("postback");
+                requestParams.removeIf(param -> param.getName().equals("postback"));
+                requestParams.add(new NameValuePair("postback", postback));
+                postbackIsNull = false;
+            }
 
-            if (jItem.getString("productDetailUrl").startsWith("//"))
-                jItem.put("productDetailUrl", jItem.getString("productDetailUrl").substring(2));
+            int offset = jObject.getInt("pageSize") * jObject.getInt("page");
+            requestParams.removeIf(param -> param.getName().equals("offset"));
+            requestParams.add(new NameValuePair("offset", String.valueOf(offset)));
 
-            if (jItem.getString("productImage").startsWith("//"))
-                jItem.put("productImage", jItem.getString("productImage").substring(2));
+            JSONArray jArray = jObject.getJSONArray("results");
+            for (int i = 0; i < jArray.length() && items.size() < size; i++) {
+                JSONObject jItem = jArray.getJSONObject(i);
 
-            jItem.put("productTitle", jItem.getString("productTitle").replaceAll(" {2}", " "));
+                if (jItem.getString("productDetailUrl").startsWith("//"))
+                    jItem.put("productDetailUrl", jItem.getString("productDetailUrl").substring(2));
 
-            float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4).replaceAll(",", ""));
-            float discount = jItem.getFloat("discount");
-            float currentPrice = originalPrice * (1 - discount/100);
-            jItem.put("currentPrice", jItem.getString("oriMinPrice").substring(0, 4)
-                    + String.format("%.2f", currentPrice).replace(',', '.'));
+                if (jItem.getString("productImage").startsWith("//"))
+                    jItem.put("productImage", jItem.getString("productImage").substring(2));
 
-            items.add(jItem.toMap());
+                jItem.put("productTitle", jItem.getString("productTitle").replaceAll(" {2}", " "));
+
+                float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4).replaceAll(",", ""));
+                float discount = jItem.getFloat("discount");
+                float currentPrice = originalPrice * (1 - discount / 100);
+                jItem.put("currentPrice", jItem.getString("oriMinPrice").substring(0, 4)
+                        + String.format("%.2f", currentPrice).replace(',', '.'));
+
+                items.add(jItem.toMap());
+            }
         }
-        // todo size
-
         return items;
     }
 
