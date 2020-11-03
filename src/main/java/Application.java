@@ -20,16 +20,30 @@ public class Application {
         }
 
         AliExpressParser aliExpressParser = new AliExpressParser(new WebClient());
-        List<Map<String, Object>> data = new ArrayList<>();
+        List<Map<String, Object>> requestsData = new ArrayList<>();
+        List<Map<String, Object>> parsingData = new ArrayList<>();
 
         try {
-            data = aliExpressParser.parseFlashDeals(url, 100);
+            requestsData = aliExpressParser.parseFlashDeals(url, 100);
+
+            // Checking that the data received through the request is equal to the data received by parsing the page
+            parsingData = aliExpressParser.parseFlashDeals(url);
+            for (int i = 0; i < parsingData.size(); i++) {
+                Map<String, Object> reqData = requestsData.get(i);
+                Map<String, Object> parsData = parsingData.get(i);
+
+                for (String key : parsData.keySet())
+                    System.out.println(key + " equal: " + parsData.get(key).equals(reqData.get(key)));
+
+                System.out.println("--------------------");
+            }
         } catch (Exception e) {
             System.out.println("Can't parse flash deals page");
         }
+        // Checking
 
         try {
-            List<String[]> strings = CSVHelper.toStrings(data);
+            List<String[]> strings = CSVHelper.toStrings(requestsData);
             CSVHelper.exportData(strings, file);
             System.out.println("Writing to csv successful");
         } catch (IOException e) {
@@ -40,11 +54,9 @@ public class Application {
         try {
             List<String[]> strings = CSVHelper.importData(file);
             System.out.println("Data equals before and after reading: "
-                    + data.toString().equals(CSVHelper.toMaps(strings).toString())); // work if file created in this run
+                    + requestsData.toString().equals(CSVHelper.toMaps(strings).toString())); // work if file created in this run
         } catch (IOException | CsvException e) {
             System.out.println("Failed to read data from file");
         }
-
-
     }
 }
