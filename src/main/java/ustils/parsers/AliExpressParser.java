@@ -108,7 +108,7 @@ public class AliExpressParser extends Parser {
                     } else if ("item-details".equals(divClass))
                         //get item title, current price, original price and discount
                         for (DomElement detail : div.getChildElements()) {
-                            String detailClass = div.getAttribute("class");
+                            String detailClass = detail.getAttribute("class");
 
                             if ("item-details-title".equals(detailClass))
                                 props.put("productTitle", detail.getVisibleText());
