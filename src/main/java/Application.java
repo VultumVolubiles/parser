@@ -33,17 +33,37 @@ public class Application {
             for (int i = 0; i < parsingData.size(); i++) {
                 Map<String, Object> reqMap = requestsData.get(i);
                 Map<String, Object> parsMap = parsingData.get(i);
-
                 int equalsRows = 0;
+
                 for (String key : parsMap.keySet()) {
-                    if (parsMap.get(key).equals(reqMap.get(key))) {
+                    if (key.equals("productDetailUrl")) {
+                        String pLink = parsMap.get(key).toString();
+                        String rLink = parsMap.get(key).toString();
+                        // 'pvid' is a parameter that has a different value each time
+                        pLink = pLink.substring(0, pLink.indexOf("pvid="));
+                        rLink = rLink.substring(0, rLink.indexOf("pvid="));
+                        if (pLink.equals(rLink)) {
+                            equalsRows++;
+                            System.out.println(key + " equal: TRUE");
+                        } else {
+                            System.out.println(key + " equal: FALSE");
+                            System.out.println("\tparsMap: " + parsMap.get(key));
+                            System.out.println("\treqMap: " + reqMap.get(key));
+                        }
+                        continue;
+                    }
+
+                    else if (parsMap.get(key).equals(reqMap.get(key))) {
                         equalsRows++;
                         System.out.println(key + " equal: TRUE");
                     } else {
                         System.out.println(key + " equal: FALSE");
+                        System.out.println("\tparsMap: " + parsMap.get(key));
+                        System.out.println("\treqMap: " + reqMap.get(key));
                     }
                 }
-                if (equalsRows == parsMap.size())
+
+                if (equalsRows == parsMap.size()-1)
                     equalsData++;
                 System.out.println("--------------------");
             }
