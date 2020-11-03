@@ -57,6 +57,12 @@ public class AliExpressParser extends Parser {
         for (int i = 0; i < jArray.length() && items.size() < size; i++) {
             JSONObject jItem = jArray.getJSONObject(i);
 
+            if (jItem.getString("productDetailUrl").startsWith("//"))
+                jItem.put("productDetailUrl", jItem.getString("productDetailUrl").substring(2));
+
+            if (jItem.getString("productImage").startsWith("//"))
+                jItem.put("productImage", jItem.getString("productImage").substring(2));
+
             float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4));
             float discount = jItem.getFloat("discount");
             float currentPrice = originalPrice * (1 - discount/100);
@@ -89,7 +95,7 @@ public class AliExpressParser extends Parser {
             if (a.getTagName().equals("a") && a.hasAttribute("href")) {
                 String link = a.getAttribute("href");
                 link = link.startsWith("//") ? link.substring(2) : link; // Remove "//" at the beginning
-                props.put("link", link);
+                props.put("productDetailUrl", link);
 
                 for (DomElement div : a.getChildElements()) {
                     String divClass = div.getAttribute("class");
@@ -98,21 +104,21 @@ public class AliExpressParser extends Parser {
                     if ("item-image".equals(divClass)) {
                         String src = div.getFirstElementChild().getAttribute("src");
                         src = src.startsWith("//") ? src.substring(2) : src; // Remove "//" at the beginning
-                        props.put("image", src);
+                        props.put("productImage", src);
                     } else if ("item-details".equals(divClass))
                         //get item title, current price, original price and discount
                         for (DomElement detail : div.getChildElements()) {
                             String detailClass = div.getAttribute("class");
 
                             if ("item-details-title".equals(detailClass))
-                                props.put("title", detail.getVisibleText());
+                                props.put("productTitle", detail.getVisibleText());
                             else if ("current-price".equals(detailClass))
                                 props.put("current price", detail.getVisibleText());
                             else if ("original-price".equals(detailClass)) {
                                 String text = detail.getVisibleText();
                                 String originalPrice = text.substring(0, text.indexOf("|") - 1);
                                 String discount = text.substring(text.indexOf("|") + 2, text.indexOf(" off"));
-                                props.put("original price", originalPrice);
+                                props.put("oriMinPrice", originalPrice);
                                 props.put("discount", discount);
                             }
                         }
