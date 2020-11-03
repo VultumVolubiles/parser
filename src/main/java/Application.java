@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Application {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         String url = "https://flashdeals.aliexpress.com/en.htm?";
         File storage = new File("storage");
         File file = storage.toPath().resolve("test.csv").toFile();
@@ -23,23 +23,37 @@ public class Application {
         List<Map<String, Object>> requestsData = new ArrayList<>();
         List<Map<String, Object>> parsingData = new ArrayList<>();
 
-        try {
+//        try {
             requestsData = aliExpressParser.parseFlashDeals(url, 100);
 
             // Checking that the data received through the request is equal to the data received by parsing the page
             parsingData = aliExpressParser.parseFlashDeals(url);
+
+            int equalsData = 0;
             for (int i = 0; i < parsingData.size(); i++) {
-                Map<String, Object> reqData = requestsData.get(i);
-                Map<String, Object> parsData = parsingData.get(i);
+                Map<String, Object> reqMap = requestsData.get(i);
+                Map<String, Object> parsMap = parsingData.get(i);
 
-                for (String key : parsData.keySet())
-                    System.out.println(key + " equal: " + parsData.get(key).equals(reqData.get(key)));
-
+                int equalsRows = 0;
+                for (String key : parsMap.keySet()) {
+                    if (parsMap.get(key).equals(reqMap.get(key))) {
+                        equalsRows++;
+                        System.out.println(key + " equal: TRUE");
+                    } else {
+                        System.out.println(key + " equal: FALSE");
+                    }
+                }
+                if (equalsRows == parsMap.size())
+                    equalsData++;
                 System.out.println("--------------------");
             }
-        } catch (Exception e) {
-            System.out.println("Can't parse flash deals page");
-        }
+            if (equalsData == parsingData.size())
+                System.out.println("ALL DATA EQUALS");
+            else
+                System.out.println("NOT ALL DATA EQUALS");
+//        } catch (Exception e) {
+//            System.out.println("Can't parse flash deals page");
+//        }
         // Checking
 
         try {
