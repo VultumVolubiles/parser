@@ -63,7 +63,7 @@ public class AliExpressParser extends Parser {
             if (jItem.getString("productImage").startsWith("//"))
                 jItem.put("productImage", jItem.getString("productImage").substring(2));
 
-            float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4));
+            float originalPrice = new Float(jItem.getString("oriMinPrice").substring(4).replaceAll(",", ""));
             float discount = jItem.getFloat("discount");
             float currentPrice = originalPrice * (1 - discount/100);
             jItem.put("currentPrice", jItem.getString("oriMinPrice").substring(0, 4)
