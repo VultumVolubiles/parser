@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Application {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         String url = "https://flashdeals.aliexpress.com/en.htm?";
         File storage = new File("storage");
         File file = storage.toPath().resolve("test.csv").toFile();
@@ -22,7 +22,7 @@ public class Application {
         List<Map<String, Object>> requestsData = new ArrayList<>();
         List<Map<String, Object>> parsingData = new ArrayList<>();
 
-//        try {
+        try {
             requestsData = aliExpressParser.parseFlashDeals(url, 100);
 
             // Checking that the data received through the request is equal to the data received by parsing the page
@@ -70,10 +70,9 @@ public class Application {
                 System.out.println("ALL DATA EQUALS");
             else
                 System.out.println("NOT ALL DATA EQUALS");
-//        } catch (Exception e) {
-//            System.out.println("Can't parse flash deals page");
-//        }
-        // Checking
+        } catch (Exception e) {
+            System.out.println("Can't parse flash deals page");
+        }
 
         try {
             List<String[]> strings = CSVHelper.toStrings(requestsData);
