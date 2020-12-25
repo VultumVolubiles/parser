@@ -6,9 +6,9 @@ import ustils.parsers.AliExpressParser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Application {
 
@@ -73,7 +73,7 @@ public class Application {
                 System.out.println("NOT ALL DATA EQUALS");
 
             // Checking for duplicate data
-            int setSize = requestsData.stream().collect(Collectors.toSet()).size();
+            int setSize = new HashSet<>(requestsData).size();
             if (requestsData.size() == setSize)
                 System.out.println("No duplicate data");
             else
